@@ -12,57 +12,151 @@
         class App {
             state = {
                 titles: [],
-                test: [],
+                recommendedMovies: [],
+                recommendedShows: [],
+                factsMovies: [],
+                factsShows: [],
             }
             view() {
                 return (`
                 <div class="px-4 sm:px-6 lg:px-8">
-                <div class="sm:flex sm:items-center">
-                    <div class="sm:flex-auto">
-                    <h1 class="text-4xl font-semibold text-gray-200">Netflix Movies and Shows</h1>
+                    <div class="sm:flex sm:items-center">
+                        <div class="sm:flex-auto">
+                            <h1 class="text-4xl font-semibold text-gray-200">Netflix Movies and Shows</h1>
+                        </div>
                     </div>
-                </div>
-                <div class="mt-8 flex flex-col">
-                    <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                    <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                        <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                        <table class="min-w-full divide-y divide-gray-300">
-                            <thead class="bg-gray-50">
-                            <tr>
-                                <th scope="col" class="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Title</th>
-                                <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
-                                <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Release Year</th>
-                                <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Genere</th>
-                                <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Production Country</th>
-                            </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white">
-                                ${this.state.titles.length > 0 ? JSON.parse(this.state.titles).map(function (title) {
-                    return (`
-                                <tr id=${title.id}>
-                                    <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">${title.title}</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">${title.type}</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.release_year}</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.genres}</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.production_countries}</td>
-                                </tr>
-                                `)
-                }).join('') : (`
+                    <!-- Start of Titles --!>
+                    <div class="mt-8 flex flex-col">
+                        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                            <table class="min-w-full divide-y divide-gray-300">
+                                <thead class="bg-gray-50">
                                 <tr>
-                                <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">Titles are loading...</td>
-                                <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">Titles are loading...</td>
-                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
-                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
-                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
+                                    <th scope="col" class="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Title</th>
+                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
+                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Release Year</th>
+                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Genere</th>
+                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Production Country</th>
                                 </tr>
-                            `)
-                    }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    ${this.state.titles.length > 0 ? JSON.parse(this.state.titles).map(function (title) {
+                                    return (`
+                                            <tr id=${title.id}>
+                                                <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">${title.title}</td>
+                                                <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">${title.type}</td>
+                                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.release_year}</td>
+                                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.genres}</td>
+                                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.production_countries}</td>
+                                            </tr>
+                                            `)
+                                    }).join('') : (`
+                                    <tr>
+                                    <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">Titles are loading...</td>
+                                    <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">Titles are loading...</td>
+                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
+                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
+                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
+                                    </tr>
+                                `)
+                        }
+                                </tbody>
+                            </table>
+                            <div>
+                        </div>
+                        </div>
+                    </div>
+                    <!-- End of Titles --!>
+                    <!-- Start of Recommended Movies --!>
+                    <div class="flex">
+                        <div class="px-4 sm:px-6 lg:px-8 my-8 w-1/2">
+                            <p class="text-4xl font-semibold text-slate-100">Recommended Movies</p>
+                            <ul role="list" class="divide-y divide-gray-200">
+                                ${this.state.recommendedMovies.length > 0 ? JSON.parse(this.state.recommendedMovies).map(function (movie) {
+                                    return `
+                                        <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 rounded-md my-2">
+                                            <div class="flex justify-between space-x-3">
+                                            <div class="min-w-0 flex-1">
+                                                    <p class="text-sm font-semibold text-gray-900 truncate">${movie.title}</p>
+                                                    <p class="text-sm text-gray-500 truncate">${movie.description}</p>
+                                            </div>
+                                            <time datetime="" class="flex-shrink-0 whitespace-nowrap text-sm text-gray-500">${movie.release_year}</time>
+                                            </div>
+                                        </li>
+                                        `
+                                }).join('') : `
+                                <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600">
+                                    <div class="flex justify-between space-x-3">
+                                        <div class="min-w-0 flex-1">
+                                                <p class="text-sm font-medium text-gray-900 truncate">Loading...</p>
+                                        </div>
+                                    </div>
+                                </li>
+                            </ul>
+                            `}
+                        </div>
+                        <!-- End of Recommended Movies --!>
+                        <!-- Start of Recommended Shows --!>
+                        <div class="px-4 sm:px-6 lg:px-8 my-8 w-1/2">
+                            <p class="text-4xl font-semibold text-slate-100">Recommended Shows</p>
+                            <ul role="list" class="divide-y divide-gray-200">
+                                ${this.state.recommendedShows.length > 0 ? JSON.parse(this.state.recommendedShows).map(function (show) {
+                                    return `
+                                        <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 rounded-md my-2">
+                                            <div class="flex justify-between space-x-3">
+                                            <div class="min-w-0 flex-1">
+                                                    <p class="text-sm font-semibold text-gray-900 truncate">${show.title}</p>
+                                                    <p class="text-sm text-gray-500 truncate">${show.description}</p>
+                                            </div>
+                                            <time datetime="" class="flex-shrink-0 whitespace-nowrap text-sm text-gray-500">${show.release_year}</time>
+                                            </div>
+                                        </li>
+                                        `
+                                }).join('') : `
+                                    <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600">
+                                        <div class="flex justify-between space-x-3">
+                                            <div class="min-w-0 flex-1">
+                                                    <p class="text-sm font-medium text-gray-900 truncate">Loading...</p>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            `}
+                        </div>
+                    </div>
+                    <!-- End of Recommended Shows --!>
+                    <!-- Start of Facts --!>
+                    <div class="px-4 sm:px-6 lg:px-8 my-8">
                         <div>
+                            <h3 class="text-4xl font-semibold text-slate-100">Interesting Facts</h3>
+                            <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                                <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
+                                    ${this.state.factsMovies.length > 0 ? 
+                                             `
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Movies produced in ${JSON.parse(this.state.factsMovies).data[0].release_year}</dt>
+                                            <dd class="mt-1 text-3xl font-semibold text-gray-900">${JSON.parse(this.state.factsMovies).data[0].id}</dd>
+                                            `
+                                             : `
+                                            Loading...
+                                        
+                                    `}
+                                </div>
+                                <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
+                                    ${this.state.factsShows.length > 0 ? 
+                                             `
+                                            <dt class="text-sm font-medium text-gray-500 truncate">Shows produced in ${JSON.parse(this.state.factsShows).data[0].release_year}</dt>
+                                            <dd class="mt-1 text-3xl font-semibold text-gray-900">${JSON.parse(this.state.factsShows).data[0].id}</dd>
+                                            `
+                                             : `
+                                            Loading...
+                                        
+                                    `}
+                                </div>
+                            </dl>
+                        </div>
                     </div>
-                    </div>
-                </div>
+                    <!-- End of Facts --!>
                 </div>
             `)
             }
@@ -116,12 +210,44 @@
                 # Convert the DataFrame to a JSON object. ('orient="records"' returns a list of objects)
                 titles_list = sanitized_titles.head(10).to_json(orient="records")
 
-                # 4. set titles to first 10 titles to the state
+                # 4. Create recommendation list for Shows and Movies
+                # 4.1 Copy the sanitized_titles to add new column to it
+                recommended_titles = sanitized_titles.copy()
+
+                # 4.2 Add new column to the sanitized_titles
+                recommended_titles["recommendation_score"] = (
+                    sanitized_titles["imdb_votes"] * 0.3 +
+                    sanitized_titles["imdb_score"] * 0.3 +
+                    sanitized_titles["tmdb_score"] * 0.2 +
+                    sanitized_titles["tmdb_popularity"] * 0.2
+                )
+                # 4.3 Create Rommended movies list
+                recommended_movies = recommended_titles.loc[recommended_titles["type"] == "MOVIE"].sort_values(
+                    by="recommendation_score", ascending=False
+                ).head(5).to_json(orient="records")
+                # 4.4 Create Rommended shows list
+                recommended_shows = recommended_titles.loc[recommended_titles["type"] == "SHOW"].sort_values(
+                    by="recommendation_score", ascending=False
+                ).head(5).to_json(orient="records")
+
+                # 5. Create facts list for Movies and Shows
+                facts_movies = sanitized_titles.loc[sanitized_titles["type"] == "MOVIE"].groupby("release_year").count()["id"].sort_values(ascending=False).head(1).to_json(orient="table")
+                facts_shows = sanitized_titles.loc[sanitized_titles["type"] == "SHOW"].groupby("release_year").count()["id"].sort_values(ascending=False).head(1).to_json(orient="table")
+
+                # 6. set titles to first 10 titles to the state
                 js.window.appComponent.state.titles = titles_list
+                js.window.appComponent.state.recommendedMovies = recommended_movies
+                js.window.appComponent.state.recommendedShows = recommended_shows
+                js.window.appComponent.state.factsMovies = facts_movies
+                js.window.appComponent.state.factsShows = facts_shows
                 js.window.appComponent.render()
             `)
         }
         main();
+    </script>
+    <script>
+        const worker = new Worker('worker.js');
+        worker.postMessage('Hello from the main thread!')
     </script>
 </body>
 
