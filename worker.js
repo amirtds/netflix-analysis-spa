@@ -100,7 +100,7 @@ self.onmessage = async function (e) {
     recommendedShows: recommendations.toJs({
       dict_converter: Object.fromEntries,
     }).shows,
-    fastcsMovies: facts.toJs({ dict_converter: Object.fromEntries }).movies,
+    factsMovies: facts.toJs({ dict_converter: Object.fromEntries }).movies,
     factsShows: facts.toJs({ dict_converter: Object.fromEntries }).shows,
   });
 };
