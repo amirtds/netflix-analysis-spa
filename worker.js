@@ -17,27 +17,27 @@ self.onmessage = async function (e) {
   response.ok && response.status === 200
     ? (titles = await response.text())
     : (titles = "");
-  // define global variable called titles to make it accessible by Python
-  self.pyodide.globals.set("titlesCSV", titles);
-  // fetch main.py, save it in browser memory and import it
+  // fetch main.py, save it in browser memory
   await self.pyodide.runPythonAsync(`
     from pyodide.http import pyfetch
     response = await pyfetch("main.py")
     with open("main.py", "wb") as f:
         f.write(await response.bytes())
   `)
+  // Importing fetched py module
   pkg = pyodide.pyimport("main");
-  let pythonResponse = pkg.analyze_titles(titles);
-  pythonResponse = pythonResponse.toJs({
+  // Run the analyze_titles function from main.py and assign the result to a variable
+  let analyzedTitles = pkg.analyze_titles(titles);
+  // convert the Proxy object to Javascript object
+  analyzedTitles = analyzedTitles.toJs({
     dict_converter: Object.fromEntries,
   });
-  console.log(pythonResponse);
-  let titlesList = pythonResponse[0];
-  let recommendedMovies = pythonResponse[1].movies
-  let recommendedShows = pythonResponse[1].shows
-  let factsMovies = pythonResponse[2].movies
-  let factsShows = pythonResponse[2].shows
-
+  // Set variables to corresponding values from the analyzedTitles object
+  let titlesList = analyzedTitles[0];
+  let recommendedMovies = analyzedTitles[1].movies
+  let recommendedShows = analyzedTitles[1].shows
+  let factsMovies = analyzedTitles[2].movies
+  let factsShows = analyzedTitles[2].shows
 
   self.postMessage({
     titles: titlesList,
