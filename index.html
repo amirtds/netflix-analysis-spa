@@ -167,6 +167,17 @@
             }
             render() {
                 app.innerHTML = this.view();
+                this.setupEvents();
+            }
+            deleteTitle(id) {
+                this.state.titles = JSON.stringify(JSON.parse(this.state.titles).filter(title => title.id != id));
+                this.render()
+            }
+            setupEvents() {
+                let deleteButtons = document.querySelectorAll(".delete")
+                    .forEach((button) => {
+                        button.addEventListener("click", () => this.deleteTitle(button.id))
+                    })
             }
         }
         var appComponent = new App();
