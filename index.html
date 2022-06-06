@@ -38,6 +38,7 @@
                                     <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Release Year</th>
                                     <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Genere</th>
                                     <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Production Country</th>
+                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"></th>
                                 </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
@@ -49,12 +50,16 @@
                                                 <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.release_year}</td>
                                                 <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.genres}</td>
                                                 <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.production_countries}</td>
+                                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
+                                                     <button id=${title.id} class="delete text-red-600 hover:text-red-900">Delete</button>
+                                                </td>
                                             </tr>
                                             `)
                                     }).join('') : (`
                                     <tr>
                                     <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">Titles are loading...</td>
                                     <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">Titles are loading...</td>
+                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
                                     <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
                                     <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
                                     <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
