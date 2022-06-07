@@ -7,11 +7,27 @@
 </head>
 
 <body class="bg-slate-900">
+    <!-- Start Search box -->
+    <div class="absolute top-1 right-0 mr-20 z-50">
+        <div class="h-full max-w-7xl mt-16 px-4 sm:px-6 lg:px-8 flex flex-row-reverse">
+            <label for="search" class="sr-only">Search</label>
+            <div class="relative text-gray-400 focus-within:text-gray-600">
+                <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <input id="search" class="block w-full bg-white py-2 pl-10 pr-3 border border-transparent rounded-md leading-5 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white focus:border-white sm:text-sm" placeholder="Search" type="search" name="search" autofocus>
+            </div>
+        </div>
+    </div>
+    <!-- End Search box -->
     <div id="app" class="relative h-full max-w-7xl mx-auto my-16"></div>
     <script>
         class App {
             state = {
                 titles: [],
+                filteredTitles: [],
                 recommendedMovies: [],
                 recommendedShows: [],
                 factsMovies: [],
@@ -25,6 +41,7 @@
                             <h1 class="text-4xl font-semibold text-gray-200">Netflix Movies and Shows</h1>
                         </div>
                     </div>
+
                     <!-- Start of Titles --!>
                     <div class="mt-8 flex flex-col">
                         <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
@@ -42,7 +59,7 @@
                                 </tr>
                                 </thead>
                                 <tbody class="divide-y divide-gray-200 bg-white">
-                                    ${this.state.titles.length > 0 ? JSON.parse(this.state.titles).map(function (title) {
+                                    ${this.state.filteredTitles.length > 0 ? JSON.parse(this.state.filteredTitles).map(function (title) {
                                     return (`
                                             <tr id=${title.id}>
                                                 <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">${title.title}</td>
@@ -170,13 +187,24 @@
                 this.setupEvents();
             }
             deleteTitle(id) {
-                this.state.titles = JSON.stringify(JSON.parse(this.state.titles).filter(title => title.id != id));
+                this.state.filteredTitles = JSON.stringify(JSON.parse(this.state.filteredTitles).filter(function (title) {
+                    return title.id !== id;
+                }));
+                this.render()
+            }
+            searchTitle(name) {
+                this.state.filteredTitles = JSON.stringify(JSON.parse(this.state.titles).filter(title => title.title.toLowerCase().includes(name.toLowerCase())));
                 this.render()
             }
             setupEvents() {
                 let deleteButtons = document.querySelectorAll(".delete")
                     .forEach((button) => {
                         button.addEventListener("click", () => this.deleteTitle(button.id))
+                    })
+                
+                let searchBox = document.querySelector("#search")
+                    .addEventListener("keyup", (e) => {
+                        this.searchTitle(e.target.value)
                     })
             }
         }
@@ -188,6 +216,7 @@
         worker.postMessage('Running Pyodide');
         worker.onmessage = function (event) {
             event.data.titles !== undefined ? appComponent.state.titles = event.data.titles : [];
+            event.data.titles !== undefined ? appComponent.state.filteredTitles = event.data.titles : [];
             event.data.recommendedMovies !== undefined ? appComponent.state.recommendedMovies = event.data.recommendedMovies : [];
             event.data.recommendedShows !== undefined ? appComponent.state.recommendedShows = event.data.recommendedShows : [];
             event.data.factsMovies !== undefined ? appComponent.state.factsMovies = event.data.factsMovies : [];
