@@ -4,6 +4,16 @@
 <head>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="//cdn.jsdelivr.net/npm/pouchdb@7.3.0/dist/pouchdb.min.js"></script>
+    <script>
+        // Setup PouDB databases
+        var titlesDB = new PouchDB('titles');
+        var recommendedMoviesDB = new PouchDB('recommendedMovies');
+        var recommendedShowsDB = new PouchDB('recommendedShows');
+        var factsMoviesDB = new PouchDB('factsMovies');
+        var factsShowsDB = new PouchDB('factsShows');
+        var remoteCouch = false;
+    </script>
 </head>
 
 <body class="bg-slate-900">
@@ -190,6 +200,9 @@
                 this.state.filteredTitles = JSON.stringify(JSON.parse(this.state.filteredTitles).filter(function (title) {
                     return title.id !== id;
                 }));
+                const title = JSON.parse(this.state.titles).find( title => title.id == id); 
+                console.log(title)
+                titlesDB.remove(title);
                 this.render()
             }
             searchTitle(name) {
@@ -210,19 +223,136 @@
         }
         var appComponent = new App();
         appComponent.render()
+
+
+
     </script>
     <script>
-        const worker = new Worker('worker.js');
-        worker.postMessage('Running Pyodide');
-        worker.onmessage = function (event) {
-            event.data.titles !== undefined ? appComponent.state.titles = event.data.titles : [];
-            event.data.titles !== undefined ? appComponent.state.filteredTitles = event.data.titles : [];
-            event.data.recommendedMovies !== undefined ? appComponent.state.recommendedMovies = event.data.recommendedMovies : [];
-            event.data.recommendedShows !== undefined ? appComponent.state.recommendedShows = event.data.recommendedShows : [];
-            event.data.factsMovies !== undefined ? appComponent.state.factsMovies = event.data.factsMovies : [];
-            event.data.factsShows !== undefined ? appComponent.state.factsShows = event.data.factsShows : [];
-            appComponent.render()
-        }
+        titlesDB.info().then(function(info) {
+            if (info.doc_count == 0) {
+                const worker = new Worker('worker.js');
+                worker.postMessage('Running Pyodide');
+                worker.onmessage = function (event) {
+                    event.data.titles !== undefined ? appComponent.state.titles = event.data.titles : [];
+                    event.data.titles !== undefined ? appComponent.state.filteredTitles = event.data.titles : [];
+                    event.data.recommendedMovies !== undefined ? appComponent.state.recommendedMovies = event.data.recommendedMovies : [];
+                    event.data.recommendedShows !== undefined ? appComponent.state.recommendedShows = event.data.recommendedShows : [];
+                    event.data.factsMovies !== undefined ? appComponent.state.factsMovies = event.data.factsMovies : [];
+                    event.data.factsShows !== undefined ? appComponent.state.factsShows = event.data.factsShows : [];
+                    appComponent.render()
+        
+                    // Add titles to database
+                    appComponent.state.titles.length > 0 
+                    ? 
+                        titlesDB.bulkDocs(JSON.parse(appComponent.state.titles))
+                            .then(function (result) {
+                                // handle result
+                            })
+                            .catch(function (err) {
+                                console.log("titles DB:", err);
+                        })
+                    :
+                        console.log("No titles to add to database");
+        
+                    // Add recommended movies to database
+                    appComponent.state.recommendedMovies.length > 0
+                    ?
+                        recommendedMoviesDB.bulkDocs(JSON.parse(appComponent.state.recommendedMovies))
+                            .then(function (result) {
+                                // handle result
+                            })
+                            .catch(function (err) {
+                                console.log("recommendedMovies DB:", err);
+                        })
+                    :
+                        console.log("No recommended movies to add to database");
+                    
+                    // Add recommended shows to database
+                    appComponent.state.recommendedShows.length > 0
+                    ?
+                        recommendedShowsDB.bulkDocs(JSON.parse(appComponent.state.recommendedShows))
+                            .then(function (result) {
+                                // handle result
+                            })
+                            .catch(function (err) {
+                                console.log("recommendedShows DB:", err);
+                        })
+                    :
+                        console.log("No recommended shows to add to database");
+        
+                    // Add facts movies to database
+                    appComponent.state.factsMovies.length > 0
+                    ?
+                        factsMoviesDB.bulkDocs(JSON.parse(appComponent.state.factsMovies).data)
+                            .then(function (result) {
+                                // handle result
+                            })
+                            .catch(function (err) {
+                                console.log("factsMovies DB:", err);
+                        })
+                    :
+                        console.log("No facts movies to add to database");
+                    
+                    // Add facts shows to database
+                    appComponent.state.factsShows.length > 0
+                    ?
+                        factsShowsDB.bulkDocs(JSON.parse(appComponent.state.factsShows).data)
+                            .then(function (result) {
+                                // handle result
+                            })
+                            .catch(function (err) {
+                                console.log("factsShows DB:", err);
+                        })
+                    :
+                        console.log("No facts shows to add to database");            
+                    }
+            } else {
+                console.log("Database already populated")
+                // use database to populate app state
+                // setting titles state
+                titlesDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
+                    const titles = doc.rows.map(function(row) {
+                        return row.doc
+                    })
+                    appComponent.state.titles = JSON.stringify(titles);
+                    appComponent.state.filteredTitles = JSON.stringify(titles);
+                    appComponent.render()
+                });
+                // setting recommended movies state
+                recommendedMoviesDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
+                    const recommendedMovies = doc.rows.map(function(row) {
+                        return row.doc
+                    })
+                    appComponent.state.recommendedMovies = JSON.stringify(recommendedMovies);
+                    appComponent.render()
+                });
+                // setting recommended shows state
+                recommendedShowsDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
+                    const recommendedShows = doc.rows.map(function(row) {
+                        return row.doc
+                    })
+                    appComponent.state.recommendedShows = JSON.stringify(recommendedShows);
+                    appComponent.render()
+                });
+                // setting facts movies state
+                factsMoviesDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
+                    const factsMovies = doc.rows.map(function(row) {
+                        return row.doc
+                    })
+                    appComponent.state.factsMovies = JSON.stringify({data:factsMovies});
+                    appComponent.render()
+                });
+                // setting facts shows state
+                factsShowsDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
+                    const factsShows = doc.rows.map(function(row) {
+                        return row.doc
+                    })
+                    appComponent.state.factsShows = JSON.stringify({data:factsShows});
+                    appComponent.render()
+                });
+
+            }
+        })
     </script>
 </body>
 
