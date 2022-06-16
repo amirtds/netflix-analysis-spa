@@ -197,12 +197,14 @@
                 this.setupEvents();
             }
             deleteTitle(id) {
+                const title = JSON.parse(this.state.titles).find( title => title.id == id); 
+                titlesDB.remove(title);
+                this.state.titles = JSON.stringify(JSON.parse(this.state.titles).filter(function (title) {
+                    return title.id !== id;
+                }));
                 this.state.filteredTitles = JSON.stringify(JSON.parse(this.state.filteredTitles).filter(function (title) {
                     return title.id !== id;
                 }));
-                const title = JSON.parse(this.state.titles).find( title => title.id == id); 
-                console.log(title)
-                titlesDB.remove(title);
                 this.render()
             }
             searchTitle(name) {
