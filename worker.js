@@ -57,41 +57,41 @@ self.onmessage = async function (e) {
   `);
 
   let recommendations = await self.pyodide.runPythonAsync(`
-      # Create recommendation list for Shows and Movies
-      # 1. Copy the sanitized_titles to add new column to it
-      recommended_titles = sanitized_titles.copy()
+    # Create recommendation list for Shows and Movies
+    # 1. Copy the sanitized_titles to add new column to it
+    recommended_titles = sanitized_titles.copy()
 
-      # 2. Add new column to the sanitized_titles
-      recommended_titles["recommendation_score"] = (
-          sanitized_titles["imdb_votes"] * 0.3 +
-          sanitized_titles["imdb_score"] * 0.3 +
-          sanitized_titles["tmdb_score"] * 0.2 +
-          sanitized_titles["tmdb_popularity"] * 0.2
-      )
-      # 3. Create Recommended movies list
-      recommended_movies = recommended_titles.loc[recommended_titles["type"] == "MOVIE"].sort_values(
-          by="recommendation_score", ascending=False
-      ).head(5).to_json(orient="records")
-      # 4. Create Recommended shows list
-      recommended_shows = recommended_titles.loc[recommended_titles["type"] == "SHOW"].sort_values(
-          by="recommendation_score", ascending=False
-      ).head(5).to_json(orient="records")
-      recommendations = {
-          "movies": recommended_movies,
-          "shows": recommended_shows
-      }
-      recommendations
+    # 2. Add new column to the sanitized_titles
+    recommended_titles["recommendation_score"] = (
+        sanitized_titles["imdb_votes"] * 0.3 +
+        sanitized_titles["imdb_score"] * 0.3 +
+        sanitized_titles["tmdb_score"] * 0.2 +
+        sanitized_titles["tmdb_popularity"] * 0.2
+    )
+    # 3. Create Recommended movies list
+    recommended_movies = recommended_titles.loc[recommended_titles["type"] == "MOVIE"].sort_values(
+        by="recommendation_score", ascending=False
+    ).head(5).to_json(orient="records")
+    # 4. Create Recommended shows list
+    recommended_shows = recommended_titles.loc[recommended_titles["type"] == "SHOW"].sort_values(
+        by="recommendation_score", ascending=False
+    ).head(5).to_json(orient="records")
+    recommendations = {
+        "movies": recommended_movies,
+        "shows": recommended_shows
+    }
+    recommendations
   `);
 
   let facts = await self.pyodide.runPythonAsync(`
-      # Create facts list for Movies and Shows
-      facts_movies = sanitized_titles.loc[sanitized_titles["type"] == "MOVIE"].groupby("release_year").count()["id"].sort_values(ascending=False).head(1).to_json(orient="table")
-      facts_shows = sanitized_titles.loc[sanitized_titles["type"] == "SHOW"].groupby("release_year").count()["id"].sort_values(ascending=False).head(1).to_json(orient="table")
-      facts = {
-          "movies": facts_movies,
-          "shows": facts_shows
-      }
-      facts
+    # Create facts list for Movies and Shows
+    facts_movies = sanitized_titles.loc[sanitized_titles["type"] == "MOVIE"].groupby("release_year").count()["id"].sort_values(ascending=False).head(1).to_json(orient="table")
+    facts_shows = sanitized_titles.loc[sanitized_titles["type"] == "SHOW"].groupby("release_year").count()["id"].sort_values(ascending=False).head(1).to_json(orient="table")
+    facts = {
+        "movies": facts_movies,
+        "shows": facts_shows
+    }
+    facts
   `);
 
   self.postMessage({
