@@ -1,361 +1,394 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
     <script src="https://cdn.jsdelivr.net/pyodide/v0.20.0/full/pyodide.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="//cdn.jsdelivr.net/npm/pouchdb@7.3.0/dist/pouchdb.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pouchdb@7.3.0/dist/pouchdb.min.js"></script>
     <script>
-        // Setup PouDB databases
-        var titlesDB = new PouchDB('titles');
-        var recommendedMoviesDB = new PouchDB('recommendedMovies');
-        var recommendedShowsDB = new PouchDB('recommendedShows');
-        var factsMoviesDB = new PouchDB('factsMovies');
-        var factsShowsDB = new PouchDB('factsShows');
-        var remoteCouch = false;
+      // Setup PouchDB databases
+      var titlesDB = new PouchDB('titles');
+      var recommendedMoviesDB = new PouchDB('recommendedMovies');
+      var recommendedShowsDB = new PouchDB('recommendedShows');
+      var factsMoviesDB = new PouchDB('factsMovies');
+      var factsShowsDB = new PouchDB('factsShows');
+      var remoteCouch = false;
     </script>
-</head>
+  </head>
 
-<body class="bg-slate-900">
+  <body class="bg-slate-900">
     <!-- Start Search box -->
     <div class="absolute top-1 right-0 mr-20 z-50">
-        <div class="h-full max-w-7xl mt-16 px-4 sm:px-6 lg:px-8 flex flex-row-reverse">
-            <label for="search" class="sr-only">Search</label>
-            <div class="relative text-gray-400 focus-within:text-gray-600">
-                <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
-                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                        <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
-                    </svg>
-                </div>
-                <input id="search" class="block w-full bg-white py-2 pl-10 pr-3 border border-transparent rounded-md leading-5 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white focus:border-white sm:text-sm" placeholder="Search" type="search" name="search" autofocus>
-            </div>
+      <div class="h-full max-w-7xl mt-16 px-4 sm:px-6 lg:px-8 flex flex-row-reverse">
+        <label for="search" class="sr-only">Search</label>
+        <div class="relative text-gray-400 focus-within:text-gray-600">
+          <div class="pointer-events-none absolute inset-y-0 left-0 pl-3 flex items-center">
+            <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+              <path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" />
+            </svg>
+          </div>
+          <input id="search" class="block w-full bg-white py-2 pl-10 pr-3 border border-transparent rounded-md leading-5 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-indigo-600 focus:ring-white focus:border-white sm:text-sm" placeholder="Search" type="search" name="search" autofocus>
         </div>
+      </div>
     </div>
     <!-- End Search box -->
+
     <div id="app" class="relative h-full max-w-7xl mx-auto my-16"></div>
     <script>
-        class App {
-            state = {
-                titles: [],
-                filteredTitles: [],
-                recommendedMovies: [],
-                recommendedShows: [],
-                factsMovies: [],
-                factsShows: [],
-            }
-            view() {
-                return (`
-                <div class="px-4 sm:px-6 lg:px-8">
-                    <div class="sm:flex sm:items-center">
-                        <div class="sm:flex-auto">
-                            <h1 class="text-4xl font-semibold text-gray-200">Netflix Movies and Shows</h1>
-                        </div>
-                    </div>
-
-                    <!-- Start of Titles --!>
-                    <div class="mt-8 flex flex-col">
-                        <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                        <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                            <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                            <table class="min-w-full divide-y divide-gray-300">
-                                <thead class="bg-gray-50">
-                                <tr>
-                                    <th scope="col" class="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Title</th>
-                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
-                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Release Year</th>
-                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Genere</th>
-                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Production Country</th>
-                                    <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"></th>
-                                </tr>
-                                </thead>
-                                <tbody class="divide-y divide-gray-200 bg-white">
-                                    ${this.state.filteredTitles.length > 0 ? JSON.parse(this.state.filteredTitles).map(function (title) {
-                                    return (`
-                                            <tr id=${title.id}>
-                                                <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">${title.title}</td>
-                                                <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">${title.type}</td>
-                                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.release_year}</td>
-                                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.genres}</td>
-                                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.production_countries}</td>
-                                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
-                                                     <button id=${title.id} class="delete text-red-600 hover:text-red-900">Delete</button>
-                                                </td>
-                                            </tr>
-                                            `)
-                                    }).join('') : (`
-                                    <tr>
-                                    <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">Titles are loading...</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">Titles are loading...</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
-                                    <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
-                                    </tr>
-                                `)
-                        }
-                                </tbody>
-                            </table>
-                            <div>
-                        </div>
-                        </div>
-                    </div>
-                    <!-- End of Titles --!>
-                    <!-- Start of Recommended Movies --!>
-                    <div class="flex">
-                        <div class="px-4 sm:px-6 lg:px-8 my-8 w-1/2">
-                            <p class="text-4xl font-semibold text-slate-100">Recommended Movies</p>
-                            <ul role="list" class="divide-y divide-gray-200">
-                                ${this.state.recommendedMovies.length > 0 ? JSON.parse(this.state.recommendedMovies).map(function (movie) {
-                                    return `
-                                        <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 rounded-md my-2">
-                                            <div class="flex justify-between space-x-3">
-                                            <div class="min-w-0 flex-1">
-                                                    <p class="text-sm font-semibold text-gray-900 truncate">${movie.title}</p>
-                                                    <p class="text-sm text-gray-500 truncate">${movie.description}</p>
-                                            </div>
-                                            <time datetime="" class="flex-shrink-0 whitespace-nowrap text-sm text-gray-500">${movie.release_year}</time>
-                                            </div>
-                                        </li>
-                                        `
-                                }).join('') : `
-                                <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600">
-                                    <div class="flex justify-between space-x-3">
-                                        <div class="min-w-0 flex-1">
-                                                <p class="text-sm font-medium text-gray-900 truncate">Loading...</p>
-                                        </div>
-                                    </div>
-                                </li>
-                            </ul>
-                            `}
-                        </div>
-                        <!-- End of Recommended Movies --!>
-                        <!-- Start of Recommended Shows --!>
-                        <div class="px-4 sm:px-6 lg:px-8 my-8 w-1/2">
-                            <p class="text-4xl font-semibold text-slate-100">Recommended Shows</p>
-                            <ul role="list" class="divide-y divide-gray-200">
-                                ${this.state.recommendedShows.length > 0 ? JSON.parse(this.state.recommendedShows).map(function (show) {
-                                    return `
-                                        <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 rounded-md my-2">
-                                            <div class="flex justify-between space-x-3">
-                                            <div class="min-w-0 flex-1">
-                                                    <p class="text-sm font-semibold text-gray-900 truncate">${show.title}</p>
-                                                    <p class="text-sm text-gray-500 truncate">${show.description}</p>
-                                            </div>
-                                            <time datetime="" class="flex-shrink-0 whitespace-nowrap text-sm text-gray-500">${show.release_year}</time>
-                                            </div>
-                                        </li>
-                                        `
-                                }).join('') : `
-                                    <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600">
-                                        <div class="flex justify-between space-x-3">
-                                            <div class="min-w-0 flex-1">
-                                                    <p class="text-sm font-medium text-gray-900 truncate">Loading...</p>
-                                            </div>
-                                        </div>
-                                    </li>
-                                </ul>
-                            `}
-                        </div>
-                    </div>
-                    <!-- End of Recommended Shows --!>
-                    <!-- Start of Facts --!>
-                    <div class="px-4 sm:px-6 lg:px-8 my-8">
-                        <div>
-                            <h3 class="text-4xl font-semibold text-slate-100">Interesting Facts</h3>
-                            <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
-                                <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
-                                    ${this.state.factsMovies.length > 0 ? 
-                                             `
-                                            <dt class="text-sm font-medium text-gray-500 truncate">Movies produced in ${JSON.parse(this.state.factsMovies).data[0].release_year}</dt>
-                                            <dd class="mt-1 text-3xl font-semibold text-gray-900">${JSON.parse(this.state.factsMovies).data[0].id}</dd>
-                                            `
-                                             : `
-                                            Loading...
-                                        
-                                    `}
-                                </div>
-                                <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
-                                    ${this.state.factsShows.length > 0 ? 
-                                             `
-                                            <dt class="text-sm font-medium text-gray-500 truncate">Shows produced in ${JSON.parse(this.state.factsShows).data[0].release_year}</dt>
-                                            <dd class="mt-1 text-3xl font-semibold text-gray-900">${JSON.parse(this.state.factsShows).data[0].id}</dd>
-                                            `
-                                             : `
-                                            Loading...
-                                        
-                                    `}
-                                </div>
-                            </dl>
-                        </div>
-                    </div>
-                    <!-- End of Facts --!>
-                </div>
-            `)
-            }
-            render() {
-                app.innerHTML = this.view();
-                this.setupEvents();
-            }
-            deleteTitle(id) {
-                const title = JSON.parse(this.state.titles).find( title => title.id == id); 
-                titlesDB.remove(title);
-                this.state.titles = JSON.stringify(JSON.parse(this.state.titles).filter(function (title) {
-                    return title.id !== id;
-                }));
-                this.state.filteredTitles = JSON.stringify(JSON.parse(this.state.filteredTitles).filter(function (title) {
-                    return title.id !== id;
-                }));
-                this.render()
-            }
-            searchTitle(name) {
-                this.state.filteredTitles = JSON.stringify(JSON.parse(this.state.titles).filter(title => title.title.toLowerCase().includes(name.toLowerCase())));
-                this.render()
-            }
-            setupEvents() {
-                let deleteButtons = document.querySelectorAll(".delete")
-                    .forEach((button) => {
-                        button.addEventListener("click", () => this.deleteTitle(button.id))
-                    })
-                
-                let searchBox = document.querySelector("#search")
-                    .addEventListener("keyup", (e) => {
-                        this.searchTitle(e.target.value)
-                    })
-            }
+      class App {
+        state = {
+          titles: [],
+          recommendedMovies: [],
+          recommendedShows: [],
+          factsMovies: [],
+          factsShows: [],
+          filteredTitles: [],
         }
-        var appComponent = new App();
-        appComponent.render()
 
+        setupEvents() {
+          let deleteButtons = document.querySelectorAll(".delete").forEach((button) => {
+            button.addEventListener("click", () => this.deleteTitle(button.id));
+          });
 
+          let searchBox = document
+            .querySelector("#search")
+            .addEventListener("keyup", (e) => {
+              this.searchTitle(e.target.value);
+            });
+        }
 
+        deleteTitle(id) {
+          const title = JSON.parse(this.state.titles).find((title) => title.id == id);
+          titlesDB.remove(title);
+          this.state.titles = JSON.stringify(
+            JSON.parse(this.state.titles).filter(function (title) {
+              return title.id !== id;
+            })
+          );
+          this.state.filteredTitles = JSON.stringify(
+            JSON.parse(this.state.filteredTitles).filter(function (title) {
+              return title.id !== id;
+            })
+          );
+          this.render();
+        }
+
+        searchTitle(name) {
+          this.state.filteredTitles = JSON.stringify(
+            JSON.parse(this.state.titles).filter((title) =>
+              title.title.toLowerCase().includes(name.toLowerCase())
+            )
+          );
+          this.render();
+        }
+
+        view() {
+          return (`
+            <div class="px-4 sm:px-6 lg:px-8">
+              <div class="sm:flex sm:items-center">
+                <div class="sm:flex-auto">
+                  <h1 class="text-4xl font-semibold text-gray-200">Netflix Movies and Shows</h1>
+                </div>
+              </div>
+              <!-- Start of Titles --!>
+              <div class="mt-8 flex flex-col">
+                <div class="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                  <div class="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                    <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
+                      <table class="min-w-full divide-y divide-gray-300">
+                        <thead class="bg-gray-50">
+                          <tr>
+                            <th scope="col" class="whitespace-nowrap py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Title</th>
+                            <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Type</th>
+                            <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Release Year</th>
+                            <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Genre</th>
+                            <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900">Production Country</th>
+                            <th scope="col" class="whitespace-nowrap px-2 py-3.5 text-left text-sm font-semibold text-gray-900"></th>
+                          </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white">
+                          ${this.state.filteredTitles.length > 0 ? JSON.parse(this.state.filteredTitles).map(function (title) {
+                            return (`
+                              <tr id=${title.id}>
+                                <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">${title.title}</td>
+                                <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">${title.type}</td>
+                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.release_year}</td>
+                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.genres}</td>
+                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">${title.production_countries}</td>
+                                <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">
+                                  <button id=${title.id} class="delete text-red-600 hover:text-red-900">Delete</button>
+                                </td>
+                              </tr>
+                            `)
+                          }).join('') : (`
+                            <tr>
+                              <td class="whitespace-nowrap py-2 pl-4 pr-3 text-sm text-gray-500 sm:pl-6">Titles are loading...</td>
+                              <td class="whitespace-nowrap px-2 py-2 text-sm font-medium text-gray-900">Titles are loading...</td>
+                              <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
+                              <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
+                              <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
+                              <td class="whitespace-nowrap px-2 py-2 text-sm text-gray-500">Titles are loading...</td>
+                            </tr>
+                          `)
+                          }
+                        </tbody>
+                      </table>
+                    <div>
+                  </div>
+                </div>
+              </div>
+              <!-- End of Titles --!>
+              <!-- Start of Recommended title --!>
+              <div class="flex">
+                <!-- Start of Recommended title --!>
+                <div class="px-4 sm:px-6 lg:px-8 my-8 w-1/2">
+                  <p class="text-4xl font-semibold text-slate-100">Recommended Movies</p>
+                  <ul role="list" class="divide-y divide-gray-200">
+                    ${this.state.recommendedMovies.length > 0 ? JSON.parse(this.state.recommendedMovies).map(function (movie) {
+                        return `
+                          <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 rounded-md my-2">
+                            <div class="flex justify-between space-x-3">
+                              <div class="min-w-0 flex-1">
+                                <p class="text-sm font-semibold text-gray-900 truncate">${movie.title}</p>
+                                <p class="text-sm text-gray-500 truncate">${movie.description}</p>
+                              </div>
+                              <time datetime="" class="flex-shrink-0 whitespace-nowrap text-sm text-gray-500">${movie.release_year}</time>
+                            </div>
+                          </li>
+                          `
+                      }).join('') : `
+                        <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600">
+                          <div class="flex justify-between space-x-3">
+                            <div class="min-w-0 flex-1">
+                              <p class="text-sm font-medium text-gray-900 truncate">Loading...</p>
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                      `
+                    }
+                  </div>
+                  <!-- End of Recommended titles --!>
+
+                  <!-- Start of Recommended Shows --!>
+                  <div class="px-4 sm:px-6 lg:px-8 my-8 w-1/2">
+                    <p class="text-4xl font-semibold text-slate-100">Recommended Shows</p>
+                    <ul role="list" class="divide-y divide-gray-200">
+                      ${this.state.recommendedShows.length > 0 ? JSON.parse(this.state.recommendedShows).map(function (show) {
+                        return `
+                          <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 rounded-md my-2">
+                            <div class="flex justify-between space-x-3">
+                              <div class="min-w-0 flex-1">
+                                <p class="text-sm font-semibold text-gray-900 truncate">${show.title}</p>
+                                <p class="text-sm text-gray-500 truncate">${show.description}</p>
+                              </div>
+                              <time datetime="" class="flex-shrink-0 whitespace-nowrap text-sm text-gray-500">${show.release_year}</time>
+                              </div>
+                            </li>
+                            `
+                      }).join('') : `
+                        <li class="relative bg-white py-5 px-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600">
+                          <div class="flex justify-between space-x-3">
+                            <div class="min-w-0 flex-1">
+                              <p class="text-sm font-medium text-gray-900 truncate">Loading...</p>
+                            </div>
+                          </div>
+                        </li>
+                      </ul>
+                    `}
+                  </div>
+                  <!-- Start of Recommended shows --!>
+              </div>
+              <!-- End of Recommended titles --!>
+              <!-- Start of Facts --!>
+              <div class="px-4 sm:px-6 lg:px-8 my-8">
+                <div>
+                  <h3 class="text-4xl font-semibold text-slate-100">Interesting Facts</h3>
+                  <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-3">
+                    <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
+                      ${this.state.factsMovies.length > 0 ?
+                        `
+                          <dt class="text-sm font-medium text-gray-500 truncate">Movies produced in ${JSON.parse(this.state.factsMovies).data[0].release_year}</dt>
+                          <dd class="mt-1 text-3xl font-semibold text-gray-900">${JSON.parse(this.state.factsMovies).data[0].id}</dd>
+                        ` : `
+                          Loading...
+                        `}
+                    </div>
+                    <div class="px-4 py-5 bg-white shadow rounded-lg overflow-hidden sm:p-6">
+                      ${this.state.factsShows.length > 0 ?
+                        `
+                          <dt class="text-sm font-medium text-gray-500 truncate">Shows produced in ${JSON.parse(this.state.factsShows).data[0].release_year}</dt>
+                          <dd class="mt-1 text-3xl font-semibold text-gray-900">${JSON.parse(this.state.factsShows).data[0].id}</dd>
+                        ` : `
+                          Loading...
+                        `}
+                    </div>
+                  </dl>
+                </div>
+              </div>
+              <!-- End of Facts --!>
+            </div>
+          `)
+        }
+        render() {
+          app.innerHTML = this.view();
+          this.setupEvents();
+        }
+      }
+
+      var appComponent = new App();
+
+      appComponent.render();
     </script>
     <script>
-        titlesDB.info().then(function(info) {
-            if (info.doc_count == 0) {
-                const worker = new Worker('worker.js');
-                worker.postMessage('Running Pyodide');
-                worker.onmessage = function (event) {
-                    event.data.titles !== undefined ? appComponent.state.titles = event.data.titles : [];
-                    event.data.titles !== undefined ? appComponent.state.filteredTitles = event.data.titles : [];
-                    event.data.recommendedMovies !== undefined ? appComponent.state.recommendedMovies = event.data.recommendedMovies : [];
-                    event.data.recommendedShows !== undefined ? appComponent.state.recommendedShows = event.data.recommendedShows : [];
-                    event.data.factsMovies !== undefined ? appComponent.state.factsMovies = event.data.factsMovies : [];
-                    event.data.factsShows !== undefined ? appComponent.state.factsShows = event.data.factsShows : [];
-                    appComponent.render()
-        
-                    // Add titles to database
-                    appComponent.state.titles.length > 0 
-                    ? 
-                        titlesDB.bulkDocs(JSON.parse(appComponent.state.titles))
-                            .then(function (result) {
-                                // handle result
-                            })
-                            .catch(function (err) {
-                                console.log("titles DB:", err);
-                        })
-                    :
-                        console.log("No titles to add to database");
-        
-                    // Add recommended movies to database
-                    appComponent.state.recommendedMovies.length > 0
-                    ?
-                        recommendedMoviesDB.bulkDocs(JSON.parse(appComponent.state.recommendedMovies))
-                            .then(function (result) {
-                                // handle result
-                            })
-                            .catch(function (err) {
-                                console.log("recommendedMovies DB:", err);
-                        })
-                    :
-                        console.log("No recommended movies to add to database");
-                    
-                    // Add recommended shows to database
-                    appComponent.state.recommendedShows.length > 0
-                    ?
-                        recommendedShowsDB.bulkDocs(JSON.parse(appComponent.state.recommendedShows))
-                            .then(function (result) {
-                                // handle result
-                            })
-                            .catch(function (err) {
-                                console.log("recommendedShows DB:", err);
-                        })
-                    :
-                        console.log("No recommended shows to add to database");
-        
-                    // Add facts movies to database
-                    appComponent.state.factsMovies.length > 0
-                    ?
-                        factsMoviesDB.bulkDocs(JSON.parse(appComponent.state.factsMovies).data)
-                            .then(function (result) {
-                                // handle result
-                            })
-                            .catch(function (err) {
-                                console.log("factsMovies DB:", err);
-                        })
-                    :
-                        console.log("No facts movies to add to database");
-                    
-                    // Add facts shows to database
-                    appComponent.state.factsShows.length > 0
-                    ?
-                        factsShowsDB.bulkDocs(JSON.parse(appComponent.state.factsShows).data)
-                            .then(function (result) {
-                                // handle result
-                            })
-                            .catch(function (err) {
-                                console.log("factsShows DB:", err);
-                        })
-                    :
-                        console.log("No facts shows to add to database");            
-                    }
-            } else {
-                console.log("Database already populated")
-                // use database to populate app state
-                // setting titles state
-                titlesDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
-                    const titles = doc.rows.map(function(row) {
-                        return row.doc
-                    })
-                    appComponent.state.titles = JSON.stringify(titles);
-                    appComponent.state.filteredTitles = JSON.stringify(titles);
-                    appComponent.render()
-                });
-                // setting recommended movies state
-                recommendedMoviesDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
-                    const recommendedMovies = doc.rows.map(function(row) {
-                        return row.doc
-                    })
-                    appComponent.state.recommendedMovies = JSON.stringify(recommendedMovies);
-                    appComponent.render()
-                });
-                // setting recommended shows state
-                recommendedShowsDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
-                    const recommendedShows = doc.rows.map(function(row) {
-                        return row.doc
-                    })
-                    appComponent.state.recommendedShows = JSON.stringify(recommendedShows);
-                    appComponent.render()
-                });
-                // setting facts movies state
-                factsMoviesDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
-                    const factsMovies = doc.rows.map(function(row) {
-                        return row.doc
-                    })
-                    appComponent.state.factsMovies = JSON.stringify({data:factsMovies});
-                    appComponent.render()
-                });
-                // setting facts shows state
-                factsShowsDB.allDocs({include_docs: true, descending: true}, function(err, doc) {
-                    const factsShows = doc.rows.map(function(row) {
-                        return row.doc
-                    })
-                    appComponent.state.factsShows = JSON.stringify({data:factsShows});
-                    appComponent.render()
-                });
+      titlesDB.info().then(function (info) {
+        if (info.doc_count == 0) {
+          const worker = new Worker("worker.js");
+          worker.postMessage("Running Pyodide");
+          worker.onmessage = function (event) {
+            event.data.titles !== undefined
+              ? (appComponent.state.titles = event.data.titles)
+              : [];
+            event.data.titles !== undefined
+              ? (appComponent.state.filteredTitles = event.data.titles)
+              : [];
+            event.data.recommendedMovies !== undefined
+              ? (appComponent.state.recommendedMovies = event.data.recommendedMovies)
+              : [];
+            event.data.recommendedShows !== undefined
+              ? (appComponent.state.recommendedShows = event.data.recommendedShows)
+              : [];
+            event.data.factsMovies !== undefined
+              ? (appComponent.state.factsMovies = event.data.factsMovies)
+              : [];
+            event.data.factsShows !== undefined
+              ? (appComponent.state.factsShows = event.data.factsShows)
+              : [];
+            appComponent.render();
 
-            }
-        })
+            // Add titles to database
+            appComponent.state.titles.length > 0
+              ? titlesDB
+                  .bulkDocs(JSON.parse(appComponent.state.titles))
+                  .then(function (result) {
+                    // handle result
+                  })
+                  .catch(function (err) {
+                    console.log("titles DB:", err);
+                  })
+              : console.log("No titles to add to database");
+
+            // Add recommended movies to database
+            appComponent.state.recommendedMovies.length > 0
+              ? recommendedMoviesDB
+                  .bulkDocs(JSON.parse(appComponent.state.recommendedMovies))
+                  .then(function (result) {
+                    // handle result
+                  })
+                  .catch(function (err) {
+                    console.log("recommendedMovies DB:", err);
+                  })
+              : console.log("No recommended movies to add to database");
+
+            // Add recommended shows to database
+            appComponent.state.recommendedShows.length > 0
+              ? recommendedShowsDB
+                  .bulkDocs(JSON.parse(appComponent.state.recommendedShows))
+                  .then(function (result) {
+                    // handle result
+                  })
+                  .catch(function (err) {
+                    console.log("recommendedShows DB:", err);
+                  })
+              : console.log("No recommended shows to add to database");
+
+            // Add facts movies to database
+            appComponent.state.factsMovies.length > 0
+              ? factsMoviesDB
+                  .bulkDocs(JSON.parse(appComponent.state.factsMovies).data)
+                  .then(function (result) {
+                    // handle result
+                  })
+                  .catch(function (err) {
+                    console.log("factsMovies DB:", err);
+                  })
+              : console.log("No facts movies to add to database");
+
+            // Add facts shows to database
+            appComponent.state.factsShows.length > 0
+              ? factsShowsDB
+                  .bulkDocs(JSON.parse(appComponent.state.factsShows).data)
+                  .then(function (result) {
+                    // handle result
+                  })
+                  .catch(function (err) {
+                    console.log("factsShows DB:", err);
+                  })
+              : console.log("No facts shows to add to database");
+          };
+        } else {
+          // use database to populate app state
+          // setting titles state
+          titlesDB.allDocs({
+            include_docs: true,
+            descending: true
+          }, function(err, doc) {
+            const titles = doc.rows.map(function(row) {
+              return row.doc
+            })
+            appComponent.state.titles = JSON.stringify(titles);
+            appComponent.state.filteredTitles = JSON.stringify(titles);
+            appComponent.render()
+          });
+          // setting recommended movies state
+          recommendedMoviesDB.allDocs({
+            include_docs: true,
+            descending: true
+          }, function(err, doc) {
+            const recommendedMovies = doc.rows.map(function(row) {
+              return row.doc
+            })
+            appComponent.state.recommendedMovies = JSON.stringify(recommendedMovies);
+            appComponent.render()
+          });
+          // setting recommended shows state
+          recommendedShowsDB.allDocs({
+            include_docs: true,
+            descending: true
+          }, function(err, doc) {
+            const recommendedShows = doc.rows.map(function(row) {
+              return row.doc
+            })
+            appComponent.state.recommendedShows = JSON.stringify(recommendedShows);
+            appComponent.render()
+          });
+          // setting facts movies state
+          factsMoviesDB.allDocs({
+            include_docs: true,
+            descending: true
+          }, function(err, doc) {
+            const factsMovies = doc.rows.map(function(row) {
+              return row.doc
+            })
+            appComponent.state.factsMovies = JSON.stringify({
+              data: factsMovies
+            });
+            appComponent.render()
+          });
+          // setting facts shows state
+          factsShowsDB.allDocs({
+            include_docs: true,
+            descending: true
+          }, function(err, doc) {
+            const factsShows = doc.rows.map(function(row) {
+              return row.doc
+            })
+            appComponent.state.factsShows = JSON.stringify({
+              data: factsShows
+            });
+            appComponent.render()
+          });
+        }
+      });
     </script>
-</body>
-
+  </body>
 </html>
